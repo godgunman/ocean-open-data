@@ -8,7 +8,6 @@ const _ = require('lodash')
 
 const readDebris = () => {
 
-  const newLines = [];
   const allDataObject = [];
 
   for (let y = 108; y <= 109; y++) {
@@ -64,11 +63,66 @@ const readDebris = () => {
 
   console.log(allDataObject.slice(0, 5));
 
-
   const csvOutput = stringify(okData, { header: true, columns })
   const doneFile = path.join(__dirname, '..', 'data', 'done', `海洋廢棄物清理狀況統計.csv`);
   fs.writeFileSync(doneFile, csvOutput)
   // console.log(newLines);
 }
 
-readDebris();
+const cetaceanStranding = () => {
+  const allDataObject = [];
+
+  for (let y = 108; y <= 109; y++) {
+    for (let q = 1; q <= 4; q++) {
+
+      const p = path.join(__dirname, '..', 'data', 'raw', `國內鯨豚擱淺事件統計-${y}年第${q}季.csv`);
+      if (fs.existsSync(p)) {
+        const encoding = chardet.detectFileSync(p);
+        console.log(`[${encoding}]` + p + '\n');
+
+        const content = iconv.decode(fs.readFileSync(p), encoding).replace(/ |　/g, '').trim();
+        const r = parse(content, { columns: true }).map(r => ({ ...r, '日期': `${1911 + y}${q}` })); //YYYYQ
+        allDataObject.push(...r);
+      }
+    }
+  }
+
+  console.log(allDataObject);
+
+  const okData = allDataObject
+    .filter(e => e['地區'] !== '總計' && e['地區'] !== '臺灣地區');
+
+  const columns = [
+    '日期',
+    '地區',
+    '通報件數(件)',
+    '擱淺數(隻)_合計',
+    '擱淺數(隻)_活體',
+    '擱淺數(隻)_死亡',
+    '種類(隻)_合計',
+    '種類(隻)_中華白海豚',
+    '種類(隻)_大翅鯨',
+    '種類(隻)_抹香鯨',
+    '種類(隻)_熱帶斑海豚',
+    '種類(隻)_飛旋海豚',
+    '種類(隻)_瓶鼻海豚',
+    '種類(隻)_糙齒海豚',
+    '種類(隻)_弗氏海豚',
+    '種類(隻)_瑞氏海豚(花紋海豚)',
+    '種類(隻)_江豚(露脊鼠海豚)',
+    '種類(隻)_小虎鯨',
+    '種類(隻)_偽虎鯨',
+    '種類(隻)_小抹香鯨',
+    '種類(隻)_侏儒抹香鯨',
+    '種類(隻)_短肢領航鯨',
+    '種類(隻)_柯氏喙鯨',
+    '種類(隻)_其他'];
+
+  const csvOutput = stringify(okData, { header: true, columns })
+  const doneFile = path.join(__dirname, '..', 'data', 'done', `國內鯨豚擱淺事件統計.csv`);
+  fs.writeFileSync(doneFile, csvOutput)
+
+}
+
+// readDebris();
+cetaceanStranding();
